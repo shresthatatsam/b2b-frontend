@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "./Dashboard.css";
 import Overview from "./views/Overview";
 import Products from "../Product/Product";
+import { jwtDecode } from "jwt-decode";
 
 const NAV_ITEMS = [
   { key: "overview", label: "Overview", icon: "⊞" },
@@ -27,13 +28,27 @@ export default function Dashboard() {
   const [activeNav, setActiveNav] = useState("overview");
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  const user = (() => {
-    try {
-      return JSON.parse(localStorage.getItem("user")) || { name: "User" };
-    } catch {
-      return { name: "User" };
-    }
-  })();
+
+const token = localStorage.getItem("token");
+
+let user = { name: "User", role: "Member" };
+
+if (token) {
+  try {
+    const decoded = jwtDecode(token);
+
+    user = {
+      name: decoded.name,
+      email: decoded.email,
+      role: decoded.role,
+    };
+
+    console.log("USER FROM TOKEN:", user);
+  } catch (e) {
+    console.error("Token decode error:", e);
+  }
+}
+
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -71,7 +86,7 @@ export default function Dashboard() {
             {sidebarOpen && (
               <div className="user-info">
                 <span className="user-name">{user.name}</span>
-                <span className="user-role">Member</span>
+                <span className="user-role">{user.role}</span>
               </div>
             )}
           </div>

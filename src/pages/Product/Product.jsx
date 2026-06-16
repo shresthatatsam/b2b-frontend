@@ -9,12 +9,12 @@ const EMPTY_FORM = {
   stock: "",
   status: "Active",
   categoryId: "",
-  businessId: "",
   images: [],
 };
 
 export default function Products() {
   const [products, setProducts] = useState([]);
+    const [Categories, setcategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -46,6 +46,25 @@ export default function Products() {
     fetchProducts();
   }, []);
 
+
+    const fetchCategory = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await api.get("/Category");
+      setcategories(res.data);
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to load Category.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCategory();
+  }, []);
+
+
   const handleCreate = async () => {
     setSubmitting(true);
     setFormError("");
@@ -76,7 +95,6 @@ export default function Products() {
     try {
         console.log(form.name);
       await api.put(`/Product/${selected.id}`, {
-        BusinessId: form.businessId,
         CategoryId: form.categoryId,
         Name: form.name,
         Description: form.description,
@@ -122,7 +140,6 @@ export default function Products() {
       stock: product.stock,
       status: product.status,
       categoryId: product.categoryId,
-      businessId: product.businessId,
       images: [],
     });
     setFormError("");
@@ -331,24 +348,24 @@ export default function Products() {
               </div>
 
               <div className="form-row">
-                <div className="form-group">
-                  <label>Business ID</label>
-                  <input
-                    name="businessId"
-                    value={form.businessId}
-                    onChange={handleField}
-                    placeholder="UUID"
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Category ID</label>
-                  <input
-                    name="categoryId"
-                    value={form.categoryId}
-                    onChange={handleField}
-                    placeholder="UUID"
-                  />
-                </div>
+               
+          <div className="form-group">
+  <label>Category</label>
+  <select
+    name="categoryId"
+    value={form.categoryId}
+    onChange={handleField}
+    required
+  >
+    <option value="">Select Category</option>
+    {Categories.map((cat) => (
+      <option key={cat.id} value={cat.id}>
+        {cat.name}
+      </option>
+    ))}
+  </select>
+</div>
+
               </div>
 
               {modal === "create" && (
