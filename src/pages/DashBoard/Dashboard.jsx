@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "./Dashboard.css";
 import Overview from "./views/Overview";
 import Products from "../Product/Product";
+import Category from "../Category/Category";
 import { jwtDecode } from "jwt-decode";
 
 const NAV_ITEMS = [
@@ -11,12 +12,14 @@ const NAV_ITEMS = [
   { key: "projects", label: "Projects", icon: "◫" },
   { key: "messages", label: "Messages", icon: "✉" },
   { key: "products", label: "Products", icon: "◈" },
+   { key: "category", label: "Category", icon: "◈" },
   { key: "settings", label: "Settings", icon: "⚙" },
 ];
 
 const VIEWS = {
   overview: <Overview />,
   products: <Products />,
+   category: <Category />,
   analytics: <div className="coming-soon">📊 Analytics coming soon</div>,
   projects: <div className="coming-soon">◫ Projects coming soon</div>,
   messages: <div className="coming-soon">✉ Messages coming soon</div>,

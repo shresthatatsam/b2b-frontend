@@ -90,26 +90,29 @@ export default function Products() {
   };
 
   const handleUpdate = async () => {
-    setSubmitting(true);
-    setFormError("");
-    try {
-        console.log(form.name);
-      await api.put(`/Product/${selected.id}`, {
-        CategoryId: form.categoryId,
-        Name: form.name,
-        Description: form.description,
-        Price: parseFloat(form.price),
-        Stock: parseInt(form.stock),
-        Status: form.status,
-      });
-      await fetchProducts();
-      closeModal();
-    } catch (err) {
-      setFormError(err.response?.data?.message || "Failed to update product.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  setSubmitting(true);
+  setFormError("");
+  try {
+    const data = new FormData();
+    data.append("CategoryId", form.categoryId);
+    data.append("Name", form.name);
+    data.append("Description", form.description);
+    data.append("Price", parseFloat(form.price));
+    data.append("Stock", parseInt(form.stock));
+    data.append("Status", form.status);
+    form.images.forEach((f) => data.append("Images", f));
+
+    await api.put(`/Product/${selected.id}`, data, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    await fetchProducts();
+    closeModal();
+  } catch (err) {
+    setFormError(err.response?.data?.message || "Failed to update product.");
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   const handleDelete = async () => {
     setSubmitting(true);
@@ -232,11 +235,12 @@ export default function Products() {
                   <td>
                     <div className="product-cell">
                       {p.images?.[0]?.imageUrl ? (
-                        <img
-                          src={p.images[0].imageUrl}
+                      <img
+                          src={`https://localhost:7168${p.images[0].imageUrl}`}
                           alt={p.name}
                           className="product-thumb"
-                        />
+                      />
+
                       ) : (
                         <div className="product-thumb placeholder">📦</div>
                       )}
@@ -368,7 +372,7 @@ export default function Products() {
 
               </div>
 
-              {modal === "create" && (
+              {(modal === "create" || modal === "edit") && (
                 <div className="form-group">
                   <label>Images</label>
                   <input
