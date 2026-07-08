@@ -1,80 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import "./home.css";
+import { useNavigate, Link } from "react-router-dom";
+import api from "../../services/api";
+import "./Home.css";
 
-/**
- * Home Page
- * -------------------------------------------------
- * - Fetches categories dynamically for the navbar
- * - Clicking a category opens a mega-menu panel with that
- *   category's items (fetched on demand + cached)
- * - Login / Register buttons redirect to /login and /register via
- *   react-router-dom's useNavigate (requires this component to be
- *   rendered inside a <BrowserRouter>)
- *
- * Swap the two API endpoints below with your real backend routes.
- * Until then, mock data is used automatically if the fetch fails,
- * so the page always renders something.
- */
+const API_BASE = "https://localhost:7168"; // ⚠️ CHANGE THIS to your ASP.NET backend's actual port.
 
+function getImageUrl(path) {
+  return `${API_BASE}${path}`;
+}
 
-    const fetchCategory = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const res = await api.get("/Category/GetAllCategories");
-      setcategories(res.data);
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to load Category.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-
-const API_CATEGORIES_URL = "/api/GetAllCategories";
-const API_CATEGORY_ITEMS_URL = (categoryId) => `/api/categories/${categoryId}/products`;
-
-const MOCK_CATEGORIES = [
-  { id: "electronics", name: "Electronics" },
-  { id: "fashion", name: "Fashion" },
-  { id: "home-living", name: "Home & Living" },
-  { id: "beauty", name: "Beauty" },
-  { id: "sports", name: "Sports" },
-];
-
-const MOCK_ITEMS = {
-  electronics: [
-    { id: 1, name: "Wireless Earbuds", price: 2999, image: "https://picsum.photos/seed/earbuds/300/300" },
-    { id: 2, name: "Smart Watch", price: 4999, image: "https://picsum.photos/seed/watch/300/300" },
-    { id: 3, name: "Bluetooth Speaker", price: 1999, image: "https://picsum.photos/seed/speaker/300/300" },
-    { id: 4, name: "Laptop Stand", price: 999, image: "https://picsum.photos/seed/stand/300/300" },
-  ],
-  fashion: [
-    { id: 5, name: "Denim Jacket", price: 2499, image: "https://picsum.photos/seed/jacket/300/300" },
-    { id: 6, name: "Running Shoes", price: 3299, image: "https://picsum.photos/seed/shoes/300/300" },
-    { id: 7, name: "Leather Bag", price: 3999, image: "https://picsum.photos/seed/bag/300/300" },
-    { id: 8, name: "Sunglasses", price: 899, image: "https://picsum.photos/seed/glasses/300/300" },
-  ],
-  "home-living": [
-    { id: 9, name: "Ceramic Vase", price: 799, image: "https://picsum.photos/seed/vase/300/300" },
-    { id: 10, name: "Table Lamp", price: 1599, image: "https://picsum.photos/seed/lamp/300/300" },
-    { id: 11, name: "Throw Blanket", price: 1299, image: "https://picsum.photos/seed/blanket/300/300" },
-    { id: 12, name: "Wall Clock", price: 1099, image: "https://picsum.photos/seed/clock/300/300" },
-  ],
-  beauty: [
-    { id: 13, name: "Face Serum", price: 699, image: "https://picsum.photos/seed/serum/300/300" },
-    { id: 14, name: "Matte Lipstick", price: 499, image: "https://picsum.photos/seed/lipstick/300/300" },
-    { id: 15, name: "Hair Dryer", price: 1899, image: "https://picsum.photos/seed/dryer/300/300" },
-    { id: 16, name: "Perfume", price: 2199, image: "https://picsum.photos/seed/perfume/300/300" },
-  ],
-  sports: [
-    { id: 17, name: "Yoga Mat", price: 899, image: "https://picsum.photos/seed/yoga/300/300" },
-    { id: 18, name: "Dumbbell Set", price: 2599, image: "https://picsum.photos/seed/dumbbell/300/300" },
-    { id: 19, name: "Cricket Bat", price: 1799, image: "https://picsum.photos/seed/bat/300/300" },
-    { id: 20, name: "Football", price: 699, image: "https://picsum.photos/seed/football/300/300" },
-  ],
-};
+const EMPTY_MOCK_ITEMS = {}; // fallback so a failed fetch never crashes on undefined
 
 export default function Home({ onCategorySelect, onProductClick }) {
   const navigate = useNavigate();
@@ -84,6 +19,7 @@ export default function Home({ onCategorySelect, onProductClick }) {
 
   const [categories, setCategories] = useState([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [categoriesError, setCategoriesError] = useState("");
 
   const [activeCategory, setActiveCategory] = useState(null);
   const [panelOpen, setPanelOpen] = useState(false);
@@ -100,14 +36,21 @@ export default function Home({ onCategorySelect, onProductClick }) {
 
     async function loadCategories() {
       setCategoriesLoading(true);
+      setCategoriesError("");
       try {
-        const res = await fetch(API_CATEGORIES_URL);
-        if (!res.ok) throw new Error("Failed to fetch categories");
-        const data = await res.json();
-        if (!cancelled) setCategories(data);
+        const res = await api.get("/Category/GetAllCategories");
+        if (!cancelled) setCategories(res.data);
       } catch (err) {
-        // Fall back to mock data so the UI still works during development
-        if (!cancelled) setCategories(MOCK_CATEGORIES);
+        if (!cancelled) {
+          setCategories([]);
+          if (err.response?.status === 401) {
+            setCategoriesError("Not authenticated — please log in.");
+          } else {
+            setCategoriesError(
+              err.response?.data?.message || "Failed to load categories."
+            );
+          }
+        }
       } finally {
         if (!cancelled) setCategoriesLoading(false);
       }
@@ -146,14 +89,12 @@ export default function Home({ onCategorySelect, onProductClick }) {
 
     setItemsLoading(true);
     try {
-      const res = await fetch(API_CATEGORY_ITEMS_URL(category.id));
-      if (!res.ok) throw new Error("Failed to fetch items");
-      const data = await res.json();
-      setItemsCache((prev) => ({ ...prev, [category.id]: data }));
+      const res = await api.get(`/Product/GetProductByCategoryId/${category.id}`);
+      setItemsCache((prev) => ({ ...prev, [category.id]: res.data }));
     } catch (err) {
       setItemsCache((prev) => ({
-        ... ,
-        [category.id]: MOCK_ITEMS[category.id] || [],
+        ...prev,
+        [category.id]: EMPTY_MOCK_ITEMS[category.id] || [],
       }));
     } finally {
       setItemsLoading(false);
@@ -198,13 +139,7 @@ export default function Home({ onCategorySelect, onProductClick }) {
                   onClick={() => handleCategoryClick(cat)}
                 >
                   {cat.name}
-                  <svg
-                    className="chevron"
-                    width="10"
-                    height="6"
-                    viewBox="0 0 10 6"
-                    fill="none"
-                  >
+                  <svg className="chevron" width="10" height="6" viewBox="0 0 10 6" fill="none">
                     <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                   </svg>
                 </button>
@@ -230,6 +165,12 @@ export default function Home({ onCategorySelect, onProductClick }) {
           </div>
         </div>
 
+        {categoriesError && (
+          <div className="categories-banner" role="status">
+            {categoriesError}
+          </div>
+        )}
+
         {/* ---------------- MEGA MENU PANEL ---------------- */}
         <div className={`mega-panel ${panelOpen ? "open" : ""}`}>
           {activeCategory && (
@@ -250,13 +191,9 @@ export default function Home({ onCategorySelect, onProductClick }) {
               ) : (
                 <div className="mega-grid">
                   {(activeItems || []).map((item) => (
-                    <button
-                      key={item.id}
-                      className="item-card"
-                      onClick={() => onProductClick?.(item)}
-                    >
+                    <button key={item.id} className="item-card" onClick={() => onProductClick?.(item)}>
                       <div className="item-image">
-                        <img src={item.image} alt={item.name} loading="lazy" />
+                        <img src={getImageUrl(item.images[0].imageUrl)} alt={item.name} loading="lazy" />
                       </div>
                       <span className="item-name">{item.name}</span>
                       <span className="item-price">Rs. {item.price.toLocaleString()}</span>
@@ -268,9 +205,20 @@ export default function Home({ onCategorySelect, onProductClick }) {
                 </div>
               )}
 
-              <a className="view-all" href={`/category/${activeCategory.id}`}>
+              {/*
+                Link (not <a>) so this is a client-side route change, not a full
+                page reload. We pass the category along in `state` so ProductList
+                can render the heading instantly without an extra fetch — it only
+                falls back to fetching /Category/:id if someone lands here directly
+                (refresh, shared link, browser back/forward).
+              */}
+              <Link
+                className="view-all"
+                to={`/Product/ProductList/${activeCategory.id}`}
+                state={{ category: activeCategory }}
+              >
                 View all {activeCategory.name} &rarr;
-              </a>
+              </Link>
             </div>
           )}
         </div>
@@ -312,17 +260,25 @@ export default function Home({ onCategorySelect, onProductClick }) {
           <span className="section-rule" />
         </div>
         <div className="category-grid">
-          {(categoriesLoading ? MOCK_CATEGORIES : categories).map((cat, i) => (
-            <button
-              key={cat.id}
-              className="category-tile"
-              style={{ "--tile-index": i }}
-              onClick={() => handleCategoryClick(cat)}
-            >
-              <span className="category-tile-name">{cat.name}</span>
-              <span className="category-tile-arrow">&rarr;</span>
-            </button>
-          ))}
+          {categoriesLoading ? (
+            [1, 2, 3, 4, 5].map((n) => (
+              <div key={n} className="category-tile skeleton-card" />
+            ))
+          ) : categories.length > 0 ? (
+            categories.map((cat, i) => (
+              <button
+                key={cat.id}
+                className="category-tile"
+                style={{ "--tile-index": i }}
+                onClick={() => handleCategoryClick(cat)}
+              >
+                <span className="category-tile-name">{cat.name}</span>
+                <span className="category-tile-arrow">&rarr;</span>
+              </button>
+            ))
+          ) : (
+            <p className="empty-note">No categories available right now.</p>
+          )}
         </div>
       </section>
     </div>

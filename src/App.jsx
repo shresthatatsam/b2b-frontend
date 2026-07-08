@@ -4,6 +4,7 @@ import Login from "./pages/Login/Login";
 import Register from "./pages/Register/Register";
 import Dashboard from "./pages/DashBoard/Dashboard";
 import Products from "./pages/Product/Product";
+import ProductList from "./pages/Product/ProductList";
 import Category from "./pages/Category/Category";
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
         <Route path="/register" element={<Register />} />
          <Route path="/dashboard" element={<Dashboard />} />
              <Route path="/category" element={<Category />} />
+        <Route path="/Product/ProductList/:categoryId" element={<ProductList />}/>
           <Route path="/product" element={<Products />} />
       </Routes>
     </BrowserRouter>
