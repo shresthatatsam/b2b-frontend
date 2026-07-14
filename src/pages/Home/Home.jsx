@@ -64,6 +64,25 @@ export default function Home({ onCategorySelect, onProductClick }) {
     };
   }, []);
 
+
+const [mostViewedProducts, setMostViewedProducts] = useState([]);
+const [productsLoading, setProductsLoading] = useState(true);
+const productSliderRef = useRef(null);
+useEffect(() => {
+  async function loadProducts() {
+    try {
+      const res = await api.get("/Product/GetMostViewedProducts");
+      setMostViewedProducts(res.data);
+    } catch (err) {
+      setMostViewedProducts([]);
+    } finally {
+      setProductsLoading(false);
+    }
+  }
+
+  loadProducts();
+}, []);
+
   // ---- Close the mega-menu when clicking outside the navbar ----
   useEffect(() => {
     function handleClickOutside(e) {
@@ -296,33 +315,39 @@ const categorySliderRef = useRef(null);
       </section>
 
   {/* ---------------- Most Viewed ---------------- */}
-      <section className="category-grid-section">
-        <div className="section-heading">
-          <h2>Shop by category</h2>
-          <span className="section-rule" />
-        </div>
-        <div className="category-grid" ref={categorySliderRef}>
-          {categoriesLoading ? (
-            [1, 2, 3, 4, 5].map((n) => (
-              <div key={n} className="category-tile skeleton-card" />
-            ))
-          ) : categories.length > 0 ? (
-            categories.map((cat, i) => (
-              <button
-                key={cat.id}
-                className="category-tile"
-                style={{ "--tile-index": i }}
-                onClick={() => handleCategoryClick(cat)}
-              >
-                <span className="category-tile-name">{cat.name}</span>
-                <span className="category-tile-arrow">&rarr;</span>
-              </button>
-            ))
-          ) : (
-            <p className="empty-note">No categories available right now.</p>
-          )}
-        </div>
-      </section>
+   <section className="most-viewed-section">
+  <div className="section-heading">
+    <h2>Most Viewed Products</h2>
+    <span className="section-rule" />
+  </div>
+
+  <div className="product-slider" ref={productSliderRef}>
+    {productsLoading ? (
+      [1, 2, 3, 4, 5].map((n) => (
+        <div key={n} className="product-card skeleton-card" />
+      ))
+    ) : mostViewedProducts.length > 0 ? (
+      mostViewedProducts.map((product) => (
+        <button
+          key={product.id}
+          className="product-card"
+          onClick={() => onProductClick(product)}
+        >
+          <img
+            src={getImageUrl(product.images[0].imageUrl)}
+            alt={product.name}
+          />
+
+          <h4>{product.name}</h4>
+
+          <p>Rs. {product.price.toLocaleString()}</p>
+        </button>
+      ))
+    ) : (
+      <p className="empty-note">No products available.</p>
+    )}
+  </div>
+</section>
 
       <CategorySidebar
         open={sidebarOpen}
