@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import api from "../../services/api";
+import CategorySidebar from "../Category/CategorySidebar";
 import "./Home.css";
 
 const API_BASE = "https://localhost:7168"; // ⚠️ CHANGE THIS to your ASP.NET backend's actual port.
@@ -27,6 +28,7 @@ export default function Home({ onCategorySelect, onProductClick }) {
   const [itemsLoading, setItemsLoading] = useState(false);
 
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const navRef = useRef(null);
 
@@ -72,6 +74,27 @@ export default function Home({ onCategorySelect, onProductClick }) {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+const categorySliderRef = useRef(null);
+  useEffect(() => {
+  const slider = categorySliderRef.current;
+  if (!slider) return;
+
+  const interval = setInterval(() => {
+    if (slider.scrollLeft + slider.clientWidth >= slider.scrollWidth - 5) {
+      slider.scrollTo({
+        left: 0,
+        behavior: "smooth",
+      });
+    } else {
+      slider.scrollBy({
+        left: 220,
+        behavior: "smooth",
+      });
+    }
+  }, 2000); // Scroll every 2 seconds
+
+  return () => clearInterval(interval);
+}, []);
 
   // ---- Fetch items for a category (with cache) on click ----
   async function handleCategoryClick(category) {
@@ -108,6 +131,19 @@ export default function Home({ onCategorySelect, onProductClick }) {
       {/* ---------------- NAVBAR ---------------- */}
       <header className="navbar" ref={navRef}>
         <div className="navbar-row">
+          <button
+            className="hamburger-trigger"
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Open all categories"
+          >
+            <span className="bars">
+              <span />
+              <span />
+              <span />
+            </span>
+           
+          </button>
+
           <a className="brand" href="/">
             <span className="brand-mark">Ma</span>
             <span className="brand-rest">rket</span>
@@ -123,29 +159,6 @@ export default function Home({ onCategorySelect, onProductClick }) {
             <span />
             <span />
           </button>
-
-          <nav className={`nav-links ${mobileNavOpen ? "is-open" : ""}`}>
-            {categoriesLoading ? (
-              <div className="nav-skeleton">
-                {[1, 2, 3, 4].map((n) => (
-                  <span key={n} className="skeleton-pill" />
-                ))}
-              </div>
-            ) : (
-              categories.map((cat) => (
-                <button
-                  key={cat.id}
-                  className={`nav-link ${activeCategory?.id === cat.id && panelOpen ? "active" : ""}`}
-                  onClick={() => handleCategoryClick(cat)}
-                >
-                  {cat.name}
-                  <svg className="chevron" width="10" height="6" viewBox="0 0 10 6" fill="none">
-                    <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                  </svg>
-                </button>
-              ))
-            )}
-          </nav>
 
           <div className="navbar-search">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -259,7 +272,7 @@ export default function Home({ onCategorySelect, onProductClick }) {
           <h2>Shop by category</h2>
           <span className="section-rule" />
         </div>
-        <div className="category-grid">
+        <div className="category-grid" ref={categorySliderRef}>
           {categoriesLoading ? (
             [1, 2, 3, 4, 5].map((n) => (
               <div key={n} className="category-tile skeleton-card" />
@@ -281,6 +294,45 @@ export default function Home({ onCategorySelect, onProductClick }) {
           )}
         </div>
       </section>
+
+  {/* ---------------- Most Viewed ---------------- */}
+      <section className="category-grid-section">
+        <div className="section-heading">
+          <h2>Shop by category</h2>
+          <span className="section-rule" />
+        </div>
+        <div className="category-grid" ref={categorySliderRef}>
+          {categoriesLoading ? (
+            [1, 2, 3, 4, 5].map((n) => (
+              <div key={n} className="category-tile skeleton-card" />
+            ))
+          ) : categories.length > 0 ? (
+            categories.map((cat, i) => (
+              <button
+                key={cat.id}
+                className="category-tile"
+                style={{ "--tile-index": i }}
+                onClick={() => handleCategoryClick(cat)}
+              >
+                <span className="category-tile-name">{cat.name}</span>
+                <span className="category-tile-arrow">&rarr;</span>
+              </button>
+            ))
+          ) : (
+            <p className="empty-note">No categories available right now.</p>
+          )}
+        </div>
+      </section>
+
+      <CategorySidebar
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        categories={categories}
+        categoriesLoading={categoriesLoading}
+        onCategoryClick={handleCategoryClick}
+        onLoginClick={handleLoginClick}
+        onRegisterClick={handleRegisterClick}
+      />
     </div>
   );
 }

@@ -1,0 +1,183 @@
+/* ---------------------------------------------------------------
+   Amazon-style slide-in category sidebar.
+   Self-contained: only touches its own classes, so it drops into
+   any existing Home.css without fighting existing navbar styles.
+------------------------------------------------------------------ */
+
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+.sidebar-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.category-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 320px;
+  max-width: 85vw;
+  background: #232f3e; /* Amazon navy */
+  color: #ffffff;
+  z-index: 201;
+  transform: translateX(-100%);
+  transition: transform 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.25);
+}
+.category-sidebar.open {
+  transform: translateX(0);
+}
+
+.sidebar-account {
+  position: relative;
+  background: #232f3e;
+  padding: 18px 20px 20px;
+  border-bottom: 1px solid #3a4553;
+}
+.sidebar-close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+.sidebar-close:hover {
+  opacity: 0.75;
+}
+.sidebar-greeting {
+  font-size: 17px;
+  font-weight: 700;
+  margin: 4px 0 10px;
+}
+.sidebar-signin {
+  width: 100%;
+  background: #f3a847;
+  color: #111;
+  border: none;
+  font-weight: 700;
+  font-size: 13.5px;
+  padding: 9px 0;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.sidebar-signin:hover {
+  background: #e9982f;
+}
+
+.sidebar-section {
+  padding: 14px 0;
+}
+.sidebar-heading {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+  padding: 6px 20px 10px;
+  margin: 0;
+}
+.sidebar-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.sidebar-link {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 14.5px;
+  text-align: left;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+.sidebar-link:hover {
+  background: #37475a;
+}
+.sidebar-chevron {
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+.sidebar-empty {
+  padding: 10px 20px;
+  font-size: 13.5px;
+  color: #b7bec7;
+}
+
+.sidebar-skeleton {
+  height: 16px;
+  width: 70%;
+  margin: 10px 20px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #3a4553 25%, #465162 37%, #3a4553 63%);
+  background-size: 400% 100%;
+  animation: sidebar-shimmer 1.4s ease infinite;
+  list-style: none;
+}
+@keyframes sidebar-shimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+.sidebar-divider {
+  height: 1px;
+  background: #3a4553;
+  margin: 4px 0;
+}
+
+/* Trigger button that lives in the navbar */
+.hamburger-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px 10px;
+  color: inherit;
+  font-size: 14px;
+  font-weight: 600;
+}
+.hamburger-trigger:hover {
+  opacity: 0.7;
+}
+.hamburger-trigger .bars {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.hamburger-trigger .bars span {
+  display: block;
+  width: 18px;
+  height: 2px;
+  background: currentColor;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .category-sidebar,
+  .sidebar-overlay {
+    transition: none;
+  }
+  .sidebar-skeleton {
+    animation: none;
+  }
+}

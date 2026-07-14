@@ -54,10 +54,31 @@
 .navbar-row {
   display: flex;
   align-items: center;
-  gap: 28px;
+  gap: 20px;
   max-width: 1280px;
   margin: 0 auto;
   padding: 16px 32px;
+}
+
+/*
+  hamburger-trigger's base look (icon + currentColor bars) lives in
+  CategorySidebar.css so it works on any page that imports the sidebar.
+  This just fits it into the navbar's rhythm and gives it the same
+  hover treatment as the rest of the nav. Loaded after CategorySidebar.css
+  (Home.jsx imports CategorySidebar before "./Home.css"), so this wins
+  on equal specificity without needing !important.
+*/
+.hamburger-trigger {
+  border-radius: 8px;
+  padding: 8px;
+  color: var(--ink);
+  flex-shrink: 0;
+  transition: background 0.15s ease;
+}
+
+.hamburger-trigger:hover {
+  background: var(--cream-deep);
+  opacity: 1;
 }
 
 .brand {
@@ -66,6 +87,7 @@
   font-weight: 600;
   letter-spacing: -0.01em;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .brand-mark {
@@ -76,70 +98,24 @@
   color: var(--mustard);
 }
 
-.nav-links {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex: 1;
-}
+/* The old category dropdown nav (.nav-links / .nav-link / .nav-skeleton /
+   .skeleton-pill) and the responsive block that only existed to show/hide
+   it were removed — category browsing now lives entirely in the sidebar,
+   so those rules were dead weight. */
 
-.nav-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: none;
-  border: none;
-  padding: 8px 14px;
-  border-radius: 8px;
-  font-size: 14.5px;
-  font-weight: 600;
-  color: var(--ink-soft);
-  transition: background 0.15s ease, color 0.15s ease;
-}
-
-.nav-link:hover {
-  background: var(--cream-deep);
-  color: var(--ink);
-}
-
-.nav-link.active {
-  background: var(--ink);
-  color: var(--cream);
-}
-
-.nav-link .chevron {
-  transition: transform 0.2s ease;
-  opacity: 0.6;
-}
-
-.nav-link.active .chevron {
-  transform: rotate(180deg);
-  opacity: 1;
-}
-
-.nav-skeleton {
-  display: flex;
-  gap: 10px;
-}
-
-.skeleton-pill {
-  width: 78px;
-  height: 30px;
-  border-radius: 8px;
-  background: linear-gradient(90deg, var(--cream-deep) 25%, var(--white) 50%, var(--cream-deep) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.3s infinite;
-}
-
-@keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+.mobile-toggle {
+  /* The category dropdown this used to reveal on small screens is gone —
+     hamburger-trigger now covers that job at every width. Kept selector
+     (rather than deleted) so nothing breaks if the JSX button is still
+     around; it just never renders. */
+  display: none;
 }
 
 .navbar-search {
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-left: auto;
   background: var(--cream);
   border: 1px solid var(--line);
   border-radius: 999px;
@@ -192,7 +168,7 @@
 
 .btn-ghost:hover {
   background: var(--ink);
-  color: var(--cream);
+  color: var(--ink);
 }
 
 .btn-solid {
@@ -210,20 +186,17 @@
   font-size: 15px;
 }
 
-.mobile-toggle {
-  display: none;
-  flex-direction: column;
-  gap: 4px;
-  background: none;
-  border: none;
-  padding: 6px;
-}
-
-.mobile-toggle span {
-  width: 22px;
-  height: 2px;
-  background: var(--ink);
-  border-radius: 2px;
+/* Auth/session banner (e.g. "Not authenticated — please log in.") —
+   used in Home.jsx but had no styling before. */
+.categories-banner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 10px 32px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  background: var(--mustard-soft);
+  border-top: 1px solid var(--line);
 }
 
 /* =========================================================
@@ -335,6 +308,11 @@
   animation: shimmer 1.3s infinite;
 }
 
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 .empty-note {
   grid-column: 1 / -1;
   color: var(--ink-soft);
@@ -400,6 +378,7 @@
 .hero-actions {
   display: flex;
   gap: 14px;
+  color: white;
 }
 
 .hero-art {
@@ -483,10 +462,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
   font-weight: 700;
   font-size: 14.5px;
   color: var(--ink);
   transition: background 0.15s ease, transform 0.15s ease;
+  /* --tile-index is set inline per tile in Home.jsx; this staggers each
+     tile's entrance slightly so the grid doesn't pop in as one flat block. */
+  animation: tile-in 0.4s ease backwards;
+  animation-delay: calc(var(--tile-index, 0) * 40ms);
 }
 
 .category-tile:hover {
@@ -495,8 +479,20 @@
   transform: translateY(-2px);
 }
 
+.category-tile-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .category-tile-arrow {
   opacity: 0.5;
+  flex-shrink: 0;
+}
+
+@keyframes tile-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* =========================================================
@@ -517,33 +513,8 @@
 }
 
 @media (max-width: 760px) {
-  .mobile-toggle {
-    display: flex;
-  }
-
   .navbar-search {
     display: none;
-  }
-
-  .nav-links {
-    display: none;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background: var(--white);
-    flex-direction: column;
-    align-items: stretch;
-    padding: 8px 16px 16px;
-    border-bottom: 1px solid var(--line);
-  }
-
-  .nav-links.is-open {
-    display: flex;
-  }
-
-  .nav-link {
-    justify-content: space-between;
   }
 
   .hero h1 {
@@ -552,5 +523,57 @@
 
   .auth-buttons .btn-ghost {
     display: none;
+   
   }
+}
+
+/* =========================================================
+   MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-card,
+  .category-tile {
+    animation: none;
+  }
+  .item-card,
+  .category-tile,
+  .btn {
+    transition: none;
+  }
+}
+.category-grid {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 20px;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  scroll-behavior: smooth;
+  padding-bottom: 10px;
+}
+
+.category-tile {
+  flex: 0 0 220px;
+  min-width: 220px;
+}
+
+/* Optional: Style the scrollbar */
+.category-grid::-webkit-scrollbar {
+  height: 5px;
+}
+
+.category-grid::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.category-grid::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.category-grid::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
